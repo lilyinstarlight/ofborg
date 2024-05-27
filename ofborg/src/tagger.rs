@@ -13,8 +13,10 @@ impl Default for StdenvTagger {
     fn default() -> StdenvTagger {
         let mut t = StdenvTagger {
             possible: vec![
-                String::from("10.rebuild-linux-stdenv"),
-                String::from("10.rebuild-darwin-stdenv"),
+                String::from("10.rebuild-x86_64-linux-stdenv"),
+                String::from("10.rebuild-aarch64-linux-stdenv"),
+                String::from("10.rebuild-x86_64-darwin-stdenv"),
+                String::from("10.rebuild-aarch64-darwin-stdenv"),
             ],
             selected: vec![],
         };
@@ -33,10 +35,20 @@ impl StdenvTagger {
         for system in systems {
             match system {
                 tasks::eval::stdenvs::System::X8664Darwin => {
-                    self.selected.push(String::from("10.rebuild-darwin-stdenv"));
+                    self.selected
+                        .push(String::from("10.rebuild-x86_64-darwin-stdenv"));
+                }
+                tasks::eval::stdenvs::System::AArch64Darwin => {
+                    self.selected
+                        .push(String::from("10.rebuild-aarch64-darwin-stdenv"));
                 }
                 tasks::eval::stdenvs::System::X8664Linux => {
-                    self.selected.push(String::from("10.rebuild-linux-stdenv"));
+                    self.selected
+                        .push(String::from("10.rebuild-x86_64-linux-stdenv"));
+                }
+                tasks::eval::stdenvs::System::AArch64Linux => {
+                    self.selected
+                        .push(String::from("10.rebuild-aarch64-linux-stdenv"));
                 }
             }
         }
@@ -120,26 +132,46 @@ impl Default for RebuildTagger {
     fn default() -> RebuildTagger {
         RebuildTagger {
             possible: vec![
-                String::from("10.rebuild-darwin: 0"),
-                String::from("10.rebuild-darwin: 1"),
-                String::from("10.rebuild-darwin: 1-10"),
-                String::from("10.rebuild-darwin: 11-100"),
-                String::from("10.rebuild-darwin: 101-500"),
-                String::from("10.rebuild-darwin: 501+"),
-                String::from("10.rebuild-darwin: 501-1000"),
-                String::from("10.rebuild-darwin: 1001-2500"),
-                String::from("10.rebuild-darwin: 2501-5000"),
-                String::from("10.rebuild-darwin: 5001+"),
-                String::from("10.rebuild-linux: 0"),
-                String::from("10.rebuild-linux: 1"),
-                String::from("10.rebuild-linux: 1-10"),
-                String::from("10.rebuild-linux: 11-100"),
-                String::from("10.rebuild-linux: 101-500"),
-                String::from("10.rebuild-linux: 501+"),
-                String::from("10.rebuild-linux: 501-1000"),
-                String::from("10.rebuild-linux: 1001-2500"),
-                String::from("10.rebuild-linux: 2501-5000"),
-                String::from("10.rebuild-linux: 5001+"),
+                String::from("10.rebuild-x86_64-darwin: 0"),
+                String::from("10.rebuild-x86_64-darwin: 1"),
+                String::from("10.rebuild-x86_64-darwin: 1-10"),
+                String::from("10.rebuild-x86_64-darwin: 11-100"),
+                String::from("10.rebuild-x86_64-darwin: 101-500"),
+                String::from("10.rebuild-x86_64-darwin: 501+"),
+                String::from("10.rebuild-x86_64-darwin: 501-1000"),
+                String::from("10.rebuild-x86_64-darwin: 1001-2500"),
+                String::from("10.rebuild-x86_64-darwin: 2501-5000"),
+                String::from("10.rebuild-x86_64-darwin: 5001+"),
+                String::from("10.rebuild-aarch64-darwin: 0"),
+                String::from("10.rebuild-aarch64-darwin: 1"),
+                String::from("10.rebuild-aarch64-darwin: 1-10"),
+                String::from("10.rebuild-aarch64-darwin: 11-100"),
+                String::from("10.rebuild-aarch64-darwin: 101-500"),
+                String::from("10.rebuild-aarch64-darwin: 501+"),
+                String::from("10.rebuild-aarch64-darwin: 501-1000"),
+                String::from("10.rebuild-aarch64-darwin: 1001-2500"),
+                String::from("10.rebuild-aarch64-darwin: 2501-5000"),
+                String::from("10.rebuild-aarch64-darwin: 5001+"),
+                String::from("10.rebuild-x86_64-linux: 0"),
+                String::from("10.rebuild-x86_64-linux: 1"),
+                String::from("10.rebuild-x86_64-linux: 1-10"),
+                String::from("10.rebuild-x86_64-linux: 11-100"),
+                String::from("10.rebuild-x86_64-linux: 101-500"),
+                String::from("10.rebuild-x86_64-linux: 501+"),
+                String::from("10.rebuild-x86_64-linux: 501-1000"),
+                String::from("10.rebuild-x86_64-linux: 1001-2500"),
+                String::from("10.rebuild-x86_64-linux: 2501-5000"),
+                String::from("10.rebuild-x86_64-linux: 5001+"),
+                String::from("10.rebuild-aarch64-linux: 0"),
+                String::from("10.rebuild-aarch64-linux: 1"),
+                String::from("10.rebuild-aarch64-linux: 1-10"),
+                String::from("10.rebuild-aarch64-linux: 11-100"),
+                String::from("10.rebuild-aarch64-linux: 101-500"),
+                String::from("10.rebuild-aarch64-linux: 501+"),
+                String::from("10.rebuild-aarch64-linux: 501-1000"),
+                String::from("10.rebuild-aarch64-linux: 1001-2500"),
+                String::from("10.rebuild-aarch64-linux: 2501-5000"),
+                String::from("10.rebuild-aarch64-linux: 5001+"),
             ],
             selected: vec![],
         }
@@ -152,19 +184,25 @@ impl RebuildTagger {
     }
 
     pub fn parse_attrs(&mut self, attrs: Vec<PackageArch>) {
-        let mut counter_darwin = 0;
-        let mut counter_linux = 0;
+        let mut counter_x86_64_darwin = 0;
+        let mut counter_aarch64_darwin = 0;
+        let mut counter_x86_64_linux = 0;
+        let mut counter_aarch64_linux = 0;
 
         for attr in attrs {
             match attr.architecture.as_ref() {
                 "x86_64-darwin" => {
-                    counter_darwin += 1;
+                    counter_x86_64_darwin += 1;
                 }
-                "aarch64-darwin" => {}
+                "aarch64-darwin" => {
+                    counter_aarch64_darwin += 1;
+                }
                 "x86_64-linux" => {
-                    counter_linux += 1;
+                    counter_x86_64_linux += 1;
                 }
-                "aarch64-linux" => {}
+                "aarch64-linux" => {
+                    counter_aarch64_linux += 1;
+                }
                 "i686-linux" => {}
                 arch => {
                     info!("Unknown arch: {:?}", arch);
@@ -174,16 +212,27 @@ impl RebuildTagger {
 
         self.selected = vec![];
         self.selected.extend(
-            RebuildTagger::bucket(counter_darwin)
+            RebuildTagger::bucket(counter_x86_64_darwin)
                 .iter()
-                .map(|bucket| format!("10.rebuild-darwin: {}", bucket))
+                .map(|bucket| format!("10.rebuild-x86_64-darwin: {}", bucket))
                 .collect::<Vec<String>>(),
         );
-
         self.selected.extend(
-            RebuildTagger::bucket(counter_linux)
+            RebuildTagger::bucket(counter_aarch64_darwin)
                 .iter()
-                .map(|bucket| format!("10.rebuild-linux: {}", bucket))
+                .map(|bucket| format!("10.rebuild-aarch64-darwin: {}", bucket))
+                .collect::<Vec<String>>(),
+        );
+        self.selected.extend(
+            RebuildTagger::bucket(counter_x86_64_linux)
+                .iter()
+                .map(|bucket| format!("10.rebuild-x86_64-linux: {}", bucket))
+                .collect::<Vec<String>>(),
+        );
+        self.selected.extend(
+            RebuildTagger::bucket(counter_aarch64_linux)
+                .iter()
+                .map(|bucket| format!("10.rebuild-aarch64-linux: {}", bucket))
                 .collect::<Vec<String>>(),
         );
 
@@ -296,40 +345,81 @@ mod tests {
     use super::*;
 
     struct PackageArchSrc {
-        linux: usize,
-        darwin: usize,
+        x86_64_linux: usize,
+        aarch64_linux: usize,
+        x86_64_darwin: usize,
+        aarch64_darwin: usize,
     }
 
     impl PackageArchSrc {
-        pub fn linux(linux: usize) -> PackageArchSrc {
-            PackageArchSrc { linux, darwin: 0 }
+        pub fn x86_64_linux(x86_64_linux: usize) -> PackageArchSrc {
+            PackageArchSrc {
+                x86_64_linux,
+                aarch64_linux: 0,
+                x86_64_darwin: 0,
+                aarch64_darwin: 0,
+            }
         }
 
-        pub fn and_darwin(mut self, darwin: usize) -> PackageArchSrc {
-            self.darwin = darwin;
+        pub fn and_aarch64_linux(mut self, aarch64_linux: usize) -> PackageArchSrc {
+            self.aarch64_linux = aarch64_linux;
             self
+        }
+
+        pub fn and_x86_64_darwin(mut self, x86_64_darwin: usize) -> PackageArchSrc {
+            self.x86_64_darwin = x86_64_darwin;
+            self
+        }
+
+        pub fn and_aarch64_darwin(mut self, aarch64_darwin: usize) -> PackageArchSrc {
+            self.aarch64_darwin = aarch64_darwin;
+            self
+        }
+
+        pub fn linux(linux: usize) -> PackageArchSrc {
+            PackageArchSrc::x86_64_linux(linux).and_aarch64_linux(linux)
+        }
+
+        pub fn and_darwin(self, darwin: usize) -> PackageArchSrc {
+            self.and_x86_64_darwin(darwin).and_aarch64_darwin(darwin)
         }
     }
 
     impl From<PackageArchSrc> for Vec<PackageArch> {
         fn from(src: PackageArchSrc) -> Vec<PackageArch> {
-            let darwin: Vec<PackageArch> = (0..src.darwin)
+            let x86_64_darwin: Vec<PackageArch> = (0..src.x86_64_darwin)
                 .into_iter()
                 .map(|_| PackageArch {
                     package: String::from("bogus :)"),
                     architecture: String::from("x86_64-darwin"),
                 })
                 .collect();
-            let linux: Vec<PackageArch> = (0..src.linux)
+            let aarch64_darwin: Vec<PackageArch> = (0..src.aarch64_darwin)
+                .into_iter()
+                .map(|_| PackageArch {
+                    package: String::from("bogus :)"),
+                    architecture: String::from("aarch64-darwin"),
+                })
+                .collect();
+            let x86_64_linux: Vec<PackageArch> = (0..src.x86_64_linux)
                 .into_iter()
                 .map(|_| PackageArch {
                     package: String::from("bogus :)"),
                     architecture: String::from("x86_64-linux"),
                 })
                 .collect();
+            let aarch64_linux: Vec<PackageArch> = (0..src.aarch64_linux)
+                .into_iter()
+                .map(|_| PackageArch {
+                    package: String::from("bogus :)"),
+                    architecture: String::from("aarch64-linux"),
+                })
+                .collect();
 
-            let mut combined = darwin;
-            combined.extend(linux);
+            let mut combined = x86_64_darwin;
+            combined.extend(aarch64_darwin);
+            combined.extend(x86_64_linux);
+            combined.extend(aarch64_linux);
             combined
         }
     }
@@ -337,66 +427,277 @@ mod tests {
     #[test]
     pub fn test_packages_changed() {
         let mut tagger = RebuildTagger::new();
-        tagger.parse_attrs(PackageArchSrc::linux(0).and_darwin(0).into());
+        tagger.parse_attrs(
+            PackageArchSrc::x86_64_linux(0)
+                .and_aarch64_linux(0)
+                .and_x86_64_darwin(0)
+                .and_aarch64_darwin(0)
+                .into(),
+        );
         assert_eq!(
             tagger.tags_to_add(),
-            vec!["10.rebuild-darwin: 0", "10.rebuild-linux: 0",]
+            vec![
+                "10.rebuild-x86_64-darwin: 0",
+                "10.rebuild-aarch64-darwin: 0",
+                "10.rebuild-x86_64-linux: 0",
+                "10.rebuild-aarch64-linux: 0"
+            ]
         );
         assert_eq!(
             tagger.tags_to_remove(),
             vec![
-                "10.rebuild-darwin: 1",
-                "10.rebuild-darwin: 1-10",
-                "10.rebuild-darwin: 11-100",
-                "10.rebuild-darwin: 101-500",
-                "10.rebuild-darwin: 501+",
-                "10.rebuild-darwin: 501-1000",
-                "10.rebuild-darwin: 1001-2500",
-                "10.rebuild-darwin: 2501-5000",
-                "10.rebuild-darwin: 5001+",
-                "10.rebuild-linux: 1",
-                "10.rebuild-linux: 1-10",
-                "10.rebuild-linux: 11-100",
-                "10.rebuild-linux: 101-500",
-                "10.rebuild-linux: 501+",
-                "10.rebuild-linux: 501-1000",
-                "10.rebuild-linux: 1001-2500",
-                "10.rebuild-linux: 2501-5000",
-                "10.rebuild-linux: 5001+",
+                "10.rebuild-x86_64-darwin: 1",
+                "10.rebuild-x86_64-darwin: 1-10",
+                "10.rebuild-x86_64-darwin: 11-100",
+                "10.rebuild-x86_64-darwin: 101-500",
+                "10.rebuild-x86_64-darwin: 501+",
+                "10.rebuild-x86_64-darwin: 501-1000",
+                "10.rebuild-x86_64-darwin: 1001-2500",
+                "10.rebuild-x86_64-darwin: 2501-5000",
+                "10.rebuild-x86_64-darwin: 5001+",
+                "10.rebuild-aarch64-darwin: 1",
+                "10.rebuild-aarch64-darwin: 1-10",
+                "10.rebuild-aarch64-darwin: 11-100",
+                "10.rebuild-aarch64-darwin: 101-500",
+                "10.rebuild-aarch64-darwin: 501+",
+                "10.rebuild-aarch64-darwin: 501-1000",
+                "10.rebuild-aarch64-darwin: 1001-2500",
+                "10.rebuild-aarch64-darwin: 2501-5000",
+                "10.rebuild-aarch64-darwin: 5001+",
+                "10.rebuild-x86_64-linux: 1",
+                "10.rebuild-x86_64-linux: 1-10",
+                "10.rebuild-x86_64-linux: 11-100",
+                "10.rebuild-x86_64-linux: 101-500",
+                "10.rebuild-x86_64-linux: 501+",
+                "10.rebuild-x86_64-linux: 501-1000",
+                "10.rebuild-x86_64-linux: 1001-2500",
+                "10.rebuild-x86_64-linux: 2501-5000",
+                "10.rebuild-x86_64-linux: 5001+",
+                "10.rebuild-aarch64-linux: 1",
+                "10.rebuild-aarch64-linux: 1-10",
+                "10.rebuild-aarch64-linux: 11-100",
+                "10.rebuild-aarch64-linux: 101-500",
+                "10.rebuild-aarch64-linux: 501+",
+                "10.rebuild-aarch64-linux: 501-1000",
+                "10.rebuild-aarch64-linux: 1001-2500",
+                "10.rebuild-aarch64-linux: 2501-5000",
+                "10.rebuild-aarch64-linux: 5001+",
             ]
         );
 
         let mut tagger = RebuildTagger::new();
-        tagger.parse_attrs(PackageArchSrc::linux(1).into());
+        tagger.parse_attrs(PackageArchSrc::x86_64_linux(1).into());
 
         assert_eq!(
             tagger.tags_to_add(),
             vec![
-                "10.rebuild-darwin: 0",
-                "10.rebuild-linux: 1",
-                "10.rebuild-linux: 1-10",
+                "10.rebuild-x86_64-darwin: 0",
+                "10.rebuild-aarch64-darwin: 0",
+                "10.rebuild-x86_64-linux: 1",
+                "10.rebuild-x86_64-linux: 1-10",
+                "10.rebuild-aarch64-linux: 0",
             ]
         );
         assert_eq!(
             tagger.tags_to_remove(),
             vec![
-                "10.rebuild-darwin: 1",
-                "10.rebuild-darwin: 1-10",
-                "10.rebuild-darwin: 11-100",
-                "10.rebuild-darwin: 101-500",
-                "10.rebuild-darwin: 501+",
-                "10.rebuild-darwin: 501-1000",
-                "10.rebuild-darwin: 1001-2500",
-                "10.rebuild-darwin: 2501-5000",
-                "10.rebuild-darwin: 5001+",
-                "10.rebuild-linux: 0",
-                "10.rebuild-linux: 11-100",
-                "10.rebuild-linux: 101-500",
-                "10.rebuild-linux: 501+",
-                "10.rebuild-linux: 501-1000",
-                "10.rebuild-linux: 1001-2500",
-                "10.rebuild-linux: 2501-5000",
-                "10.rebuild-linux: 5001+"
+                "10.rebuild-x86_64-darwin: 1",
+                "10.rebuild-x86_64-darwin: 1-10",
+                "10.rebuild-x86_64-darwin: 11-100",
+                "10.rebuild-x86_64-darwin: 101-500",
+                "10.rebuild-x86_64-darwin: 501+",
+                "10.rebuild-x86_64-darwin: 501-1000",
+                "10.rebuild-x86_64-darwin: 1001-2500",
+                "10.rebuild-x86_64-darwin: 2501-5000",
+                "10.rebuild-x86_64-darwin: 5001+",
+                "10.rebuild-aarch64-darwin: 1",
+                "10.rebuild-aarch64-darwin: 1-10",
+                "10.rebuild-aarch64-darwin: 11-100",
+                "10.rebuild-aarch64-darwin: 101-500",
+                "10.rebuild-aarch64-darwin: 501+",
+                "10.rebuild-aarch64-darwin: 501-1000",
+                "10.rebuild-aarch64-darwin: 1001-2500",
+                "10.rebuild-aarch64-darwin: 2501-5000",
+                "10.rebuild-aarch64-darwin: 5001+",
+                "10.rebuild-x86_64-linux: 0",
+                "10.rebuild-x86_64-linux: 11-100",
+                "10.rebuild-x86_64-linux: 101-500",
+                "10.rebuild-x86_64-linux: 501+",
+                "10.rebuild-x86_64-linux: 501-1000",
+                "10.rebuild-x86_64-linux: 1001-2500",
+                "10.rebuild-x86_64-linux: 2501-5000",
+                "10.rebuild-x86_64-linux: 5001+",
+                "10.rebuild-aarch64-linux: 1",
+                "10.rebuild-aarch64-linux: 1-10",
+                "10.rebuild-aarch64-linux: 11-100",
+                "10.rebuild-aarch64-linux: 101-500",
+                "10.rebuild-aarch64-linux: 501+",
+                "10.rebuild-aarch64-linux: 501-1000",
+                "10.rebuild-aarch64-linux: 1001-2500",
+                "10.rebuild-aarch64-linux: 2501-5000",
+                "10.rebuild-aarch64-linux: 5001+",
+            ]
+        );
+
+        let mut tagger = RebuildTagger::new();
+        tagger.parse_attrs(PackageArchSrc::x86_64_linux(0).and_aarch64_linux(1).into());
+
+        assert_eq!(
+            tagger.tags_to_add(),
+            vec![
+                "10.rebuild-x86_64-darwin: 0",
+                "10.rebuild-aarch64-darwin: 0",
+                "10.rebuild-x86_64-linux: 0",
+                "10.rebuild-aarch64-linux: 1",
+                "10.rebuild-aarch64-linux: 1-10",
+            ]
+        );
+        assert_eq!(
+            tagger.tags_to_remove(),
+            vec![
+                "10.rebuild-x86_64-darwin: 1",
+                "10.rebuild-x86_64-darwin: 1-10",
+                "10.rebuild-x86_64-darwin: 11-100",
+                "10.rebuild-x86_64-darwin: 101-500",
+                "10.rebuild-x86_64-darwin: 501+",
+                "10.rebuild-x86_64-darwin: 501-1000",
+                "10.rebuild-x86_64-darwin: 1001-2500",
+                "10.rebuild-x86_64-darwin: 2501-5000",
+                "10.rebuild-x86_64-darwin: 5001+",
+                "10.rebuild-aarch64-darwin: 1",
+                "10.rebuild-aarch64-darwin: 1-10",
+                "10.rebuild-aarch64-darwin: 11-100",
+                "10.rebuild-aarch64-darwin: 101-500",
+                "10.rebuild-aarch64-darwin: 501+",
+                "10.rebuild-aarch64-darwin: 501-1000",
+                "10.rebuild-aarch64-darwin: 1001-2500",
+                "10.rebuild-aarch64-darwin: 2501-5000",
+                "10.rebuild-aarch64-darwin: 5001+",
+                "10.rebuild-x86_64-linux: 1",
+                "10.rebuild-x86_64-linux: 1-10",
+                "10.rebuild-x86_64-linux: 11-100",
+                "10.rebuild-x86_64-linux: 101-500",
+                "10.rebuild-x86_64-linux: 501+",
+                "10.rebuild-x86_64-linux: 501-1000",
+                "10.rebuild-x86_64-linux: 1001-2500",
+                "10.rebuild-x86_64-linux: 2501-5000",
+                "10.rebuild-x86_64-linux: 5001+",
+                "10.rebuild-aarch64-linux: 0",
+                "10.rebuild-aarch64-linux: 11-100",
+                "10.rebuild-aarch64-linux: 101-500",
+                "10.rebuild-aarch64-linux: 501+",
+                "10.rebuild-aarch64-linux: 501-1000",
+                "10.rebuild-aarch64-linux: 1001-2500",
+                "10.rebuild-aarch64-linux: 2501-5000",
+                "10.rebuild-aarch64-linux: 5001+",
+            ]
+        );
+
+        let mut tagger = RebuildTagger::new();
+        tagger.parse_attrs(PackageArchSrc::linux(0).and_x86_64_darwin(1).into());
+
+        assert_eq!(
+            tagger.tags_to_add(),
+            vec![
+                "10.rebuild-x86_64-darwin: 1",
+                "10.rebuild-x86_64-darwin: 1-10",
+                "10.rebuild-aarch64-darwin: 0",
+                "10.rebuild-x86_64-linux: 0",
+                "10.rebuild-aarch64-linux: 0",
+            ]
+        );
+        assert_eq!(
+            tagger.tags_to_remove(),
+            vec![
+                "10.rebuild-x86_64-darwin: 0",
+                "10.rebuild-x86_64-darwin: 11-100",
+                "10.rebuild-x86_64-darwin: 101-500",
+                "10.rebuild-x86_64-darwin: 501+",
+                "10.rebuild-x86_64-darwin: 501-1000",
+                "10.rebuild-x86_64-darwin: 1001-2500",
+                "10.rebuild-x86_64-darwin: 2501-5000",
+                "10.rebuild-x86_64-darwin: 5001+",
+                "10.rebuild-aarch64-darwin: 1",
+                "10.rebuild-aarch64-darwin: 1-10",
+                "10.rebuild-aarch64-darwin: 11-100",
+                "10.rebuild-aarch64-darwin: 101-500",
+                "10.rebuild-aarch64-darwin: 501+",
+                "10.rebuild-aarch64-darwin: 501-1000",
+                "10.rebuild-aarch64-darwin: 1001-2500",
+                "10.rebuild-aarch64-darwin: 2501-5000",
+                "10.rebuild-aarch64-darwin: 5001+",
+                "10.rebuild-x86_64-linux: 1",
+                "10.rebuild-x86_64-linux: 1-10",
+                "10.rebuild-x86_64-linux: 11-100",
+                "10.rebuild-x86_64-linux: 101-500",
+                "10.rebuild-x86_64-linux: 501+",
+                "10.rebuild-x86_64-linux: 501-1000",
+                "10.rebuild-x86_64-linux: 1001-2500",
+                "10.rebuild-x86_64-linux: 2501-5000",
+                "10.rebuild-x86_64-linux: 5001+",
+                "10.rebuild-aarch64-linux: 1",
+                "10.rebuild-aarch64-linux: 1-10",
+                "10.rebuild-aarch64-linux: 11-100",
+                "10.rebuild-aarch64-linux: 101-500",
+                "10.rebuild-aarch64-linux: 501+",
+                "10.rebuild-aarch64-linux: 501-1000",
+                "10.rebuild-aarch64-linux: 1001-2500",
+                "10.rebuild-aarch64-linux: 2501-5000",
+                "10.rebuild-aarch64-linux: 5001+",
+            ]
+        );
+
+        let mut tagger = RebuildTagger::new();
+        tagger.parse_attrs(PackageArchSrc::linux(0).and_aarch64_darwin(1).into());
+
+        assert_eq!(
+            tagger.tags_to_add(),
+            vec![
+                "10.rebuild-x86_64-darwin: 0",
+                "10.rebuild-aarch64-darwin: 1",
+                "10.rebuild-aarch64-darwin: 1-10",
+                "10.rebuild-x86_64-linux: 0",
+                "10.rebuild-aarch64-linux: 0",
+            ]
+        );
+        assert_eq!(
+            tagger.tags_to_remove(),
+            vec![
+                "10.rebuild-x86_64-darwin: 1",
+                "10.rebuild-x86_64-darwin: 1-10",
+                "10.rebuild-x86_64-darwin: 11-100",
+                "10.rebuild-x86_64-darwin: 101-500",
+                "10.rebuild-x86_64-darwin: 501+",
+                "10.rebuild-x86_64-darwin: 501-1000",
+                "10.rebuild-x86_64-darwin: 1001-2500",
+                "10.rebuild-x86_64-darwin: 2501-5000",
+                "10.rebuild-x86_64-darwin: 5001+",
+                "10.rebuild-aarch64-darwin: 0",
+                "10.rebuild-aarch64-darwin: 11-100",
+                "10.rebuild-aarch64-darwin: 101-500",
+                "10.rebuild-aarch64-darwin: 501+",
+                "10.rebuild-aarch64-darwin: 501-1000",
+                "10.rebuild-aarch64-darwin: 1001-2500",
+                "10.rebuild-aarch64-darwin: 2501-5000",
+                "10.rebuild-aarch64-darwin: 5001+",
+                "10.rebuild-x86_64-linux: 1",
+                "10.rebuild-x86_64-linux: 1-10",
+                "10.rebuild-x86_64-linux: 11-100",
+                "10.rebuild-x86_64-linux: 101-500",
+                "10.rebuild-x86_64-linux: 501+",
+                "10.rebuild-x86_64-linux: 501-1000",
+                "10.rebuild-x86_64-linux: 1001-2500",
+                "10.rebuild-x86_64-linux: 2501-5000",
+                "10.rebuild-x86_64-linux: 5001+",
+                "10.rebuild-aarch64-linux: 1",
+                "10.rebuild-aarch64-linux: 1-10",
+                "10.rebuild-aarch64-linux: 11-100",
+                "10.rebuild-aarch64-linux: 101-500",
+                "10.rebuild-aarch64-linux: 501+",
+                "10.rebuild-aarch64-linux: 501-1000",
+                "10.rebuild-aarch64-linux: 1001-2500",
+                "10.rebuild-aarch64-linux: 2501-5000",
+                "10.rebuild-aarch64-linux: 5001+",
             ]
         );
 
@@ -405,31 +706,51 @@ mod tests {
         assert_eq!(
             tagger.tags_to_add(),
             vec![
-                "10.rebuild-darwin: 1",
-                "10.rebuild-darwin: 1-10",
-                "10.rebuild-linux: 1",
-                "10.rebuild-linux: 1-10",
+                "10.rebuild-x86_64-darwin: 1",
+                "10.rebuild-x86_64-darwin: 1-10",
+                "10.rebuild-aarch64-darwin: 1",
+                "10.rebuild-aarch64-darwin: 1-10",
+                "10.rebuild-x86_64-linux: 1",
+                "10.rebuild-x86_64-linux: 1-10",
+                "10.rebuild-aarch64-linux: 1",
+                "10.rebuild-aarch64-linux: 1-10",
             ]
         );
         assert_eq!(
             tagger.tags_to_remove(),
             vec![
-                "10.rebuild-darwin: 0",
-                "10.rebuild-darwin: 11-100",
-                "10.rebuild-darwin: 101-500",
-                "10.rebuild-darwin: 501+",
-                "10.rebuild-darwin: 501-1000",
-                "10.rebuild-darwin: 1001-2500",
-                "10.rebuild-darwin: 2501-5000",
-                "10.rebuild-darwin: 5001+",
-                "10.rebuild-linux: 0",
-                "10.rebuild-linux: 11-100",
-                "10.rebuild-linux: 101-500",
-                "10.rebuild-linux: 501+",
-                "10.rebuild-linux: 501-1000",
-                "10.rebuild-linux: 1001-2500",
-                "10.rebuild-linux: 2501-5000",
-                "10.rebuild-linux: 5001+"
+                "10.rebuild-x86_64-darwin: 0",
+                "10.rebuild-x86_64-darwin: 11-100",
+                "10.rebuild-x86_64-darwin: 101-500",
+                "10.rebuild-x86_64-darwin: 501+",
+                "10.rebuild-x86_64-darwin: 501-1000",
+                "10.rebuild-x86_64-darwin: 1001-2500",
+                "10.rebuild-x86_64-darwin: 2501-5000",
+                "10.rebuild-x86_64-darwin: 5001+",
+                "10.rebuild-aarch64-darwin: 0",
+                "10.rebuild-aarch64-darwin: 11-100",
+                "10.rebuild-aarch64-darwin: 101-500",
+                "10.rebuild-aarch64-darwin: 501+",
+                "10.rebuild-aarch64-darwin: 501-1000",
+                "10.rebuild-aarch64-darwin: 1001-2500",
+                "10.rebuild-aarch64-darwin: 2501-5000",
+                "10.rebuild-aarch64-darwin: 5001+",
+                "10.rebuild-x86_64-linux: 0",
+                "10.rebuild-x86_64-linux: 11-100",
+                "10.rebuild-x86_64-linux: 101-500",
+                "10.rebuild-x86_64-linux: 501+",
+                "10.rebuild-x86_64-linux: 501-1000",
+                "10.rebuild-x86_64-linux: 1001-2500",
+                "10.rebuild-x86_64-linux: 2501-5000",
+                "10.rebuild-x86_64-linux: 5001+",
+                "10.rebuild-aarch64-linux: 0",
+                "10.rebuild-aarch64-linux: 11-100",
+                "10.rebuild-aarch64-linux: 101-500",
+                "10.rebuild-aarch64-linux: 501+",
+                "10.rebuild-aarch64-linux: 501-1000",
+                "10.rebuild-aarch64-linux: 1001-2500",
+                "10.rebuild-aarch64-linux: 2501-5000",
+                "10.rebuild-aarch64-linux: 5001+",
             ]
         );
 
@@ -437,29 +758,52 @@ mod tests {
         tagger.parse_attrs(PackageArchSrc::linux(10).and_darwin(10).into());
         assert_eq!(
             tagger.tags_to_add(),
-            vec!["10.rebuild-darwin: 1-10", "10.rebuild-linux: 1-10",]
+            vec![
+                "10.rebuild-x86_64-darwin: 1-10",
+                "10.rebuild-aarch64-darwin: 1-10",
+                "10.rebuild-x86_64-linux: 1-10",
+                "10.rebuild-aarch64-linux: 1-10"
+            ]
         );
         assert_eq!(
             tagger.tags_to_remove(),
             vec![
-                "10.rebuild-darwin: 0",
-                "10.rebuild-darwin: 1",
-                "10.rebuild-darwin: 11-100",
-                "10.rebuild-darwin: 101-500",
-                "10.rebuild-darwin: 501+",
-                "10.rebuild-darwin: 501-1000",
-                "10.rebuild-darwin: 1001-2500",
-                "10.rebuild-darwin: 2501-5000",
-                "10.rebuild-darwin: 5001+",
-                "10.rebuild-linux: 0",
-                "10.rebuild-linux: 1",
-                "10.rebuild-linux: 11-100",
-                "10.rebuild-linux: 101-500",
-                "10.rebuild-linux: 501+",
-                "10.rebuild-linux: 501-1000",
-                "10.rebuild-linux: 1001-2500",
-                "10.rebuild-linux: 2501-5000",
-                "10.rebuild-linux: 5001+"
+                "10.rebuild-x86_64-darwin: 0",
+                "10.rebuild-x86_64-darwin: 1",
+                "10.rebuild-x86_64-darwin: 11-100",
+                "10.rebuild-x86_64-darwin: 101-500",
+                "10.rebuild-x86_64-darwin: 501+",
+                "10.rebuild-x86_64-darwin: 501-1000",
+                "10.rebuild-x86_64-darwin: 1001-2500",
+                "10.rebuild-x86_64-darwin: 2501-5000",
+                "10.rebuild-x86_64-darwin: 5001+",
+                "10.rebuild-aarch64-darwin: 0",
+                "10.rebuild-aarch64-darwin: 1",
+                "10.rebuild-aarch64-darwin: 11-100",
+                "10.rebuild-aarch64-darwin: 101-500",
+                "10.rebuild-aarch64-darwin: 501+",
+                "10.rebuild-aarch64-darwin: 501-1000",
+                "10.rebuild-aarch64-darwin: 1001-2500",
+                "10.rebuild-aarch64-darwin: 2501-5000",
+                "10.rebuild-aarch64-darwin: 5001+",
+                "10.rebuild-x86_64-linux: 0",
+                "10.rebuild-x86_64-linux: 1",
+                "10.rebuild-x86_64-linux: 11-100",
+                "10.rebuild-x86_64-linux: 101-500",
+                "10.rebuild-x86_64-linux: 501+",
+                "10.rebuild-x86_64-linux: 501-1000",
+                "10.rebuild-x86_64-linux: 1001-2500",
+                "10.rebuild-x86_64-linux: 2501-5000",
+                "10.rebuild-x86_64-linux: 5001+",
+                "10.rebuild-aarch64-linux: 0",
+                "10.rebuild-aarch64-linux: 1",
+                "10.rebuild-aarch64-linux: 11-100",
+                "10.rebuild-aarch64-linux: 101-500",
+                "10.rebuild-aarch64-linux: 501+",
+                "10.rebuild-aarch64-linux: 501-1000",
+                "10.rebuild-aarch64-linux: 1001-2500",
+                "10.rebuild-aarch64-linux: 2501-5000",
+                "10.rebuild-aarch64-linux: 5001+",
             ]
         );
 
@@ -467,29 +811,52 @@ mod tests {
         tagger.parse_attrs(PackageArchSrc::linux(11).and_darwin(11).into());
         assert_eq!(
             tagger.tags_to_add(),
-            vec!["10.rebuild-darwin: 11-100", "10.rebuild-linux: 11-100",]
+            vec![
+                "10.rebuild-x86_64-darwin: 11-100",
+                "10.rebuild-aarch64-darwin: 11-100",
+                "10.rebuild-x86_64-linux: 11-100",
+                "10.rebuild-aarch64-linux: 11-100",
+            ]
         );
         assert_eq!(
             tagger.tags_to_remove(),
             vec![
-                "10.rebuild-darwin: 0",
-                "10.rebuild-darwin: 1",
-                "10.rebuild-darwin: 1-10",
-                "10.rebuild-darwin: 101-500",
-                "10.rebuild-darwin: 501+",
-                "10.rebuild-darwin: 501-1000",
-                "10.rebuild-darwin: 1001-2500",
-                "10.rebuild-darwin: 2501-5000",
-                "10.rebuild-darwin: 5001+",
-                "10.rebuild-linux: 0",
-                "10.rebuild-linux: 1",
-                "10.rebuild-linux: 1-10",
-                "10.rebuild-linux: 101-500",
-                "10.rebuild-linux: 501+",
-                "10.rebuild-linux: 501-1000",
-                "10.rebuild-linux: 1001-2500",
-                "10.rebuild-linux: 2501-5000",
-                "10.rebuild-linux: 5001+"
+                "10.rebuild-x86_64-darwin: 0",
+                "10.rebuild-x86_64-darwin: 1",
+                "10.rebuild-x86_64-darwin: 1-10",
+                "10.rebuild-x86_64-darwin: 101-500",
+                "10.rebuild-x86_64-darwin: 501+",
+                "10.rebuild-x86_64-darwin: 501-1000",
+                "10.rebuild-x86_64-darwin: 1001-2500",
+                "10.rebuild-x86_64-darwin: 2501-5000",
+                "10.rebuild-x86_64-darwin: 5001+",
+                "10.rebuild-aarch64-darwin: 0",
+                "10.rebuild-aarch64-darwin: 1",
+                "10.rebuild-aarch64-darwin: 1-10",
+                "10.rebuild-aarch64-darwin: 101-500",
+                "10.rebuild-aarch64-darwin: 501+",
+                "10.rebuild-aarch64-darwin: 501-1000",
+                "10.rebuild-aarch64-darwin: 1001-2500",
+                "10.rebuild-aarch64-darwin: 2501-5000",
+                "10.rebuild-aarch64-darwin: 5001+",
+                "10.rebuild-x86_64-linux: 0",
+                "10.rebuild-x86_64-linux: 1",
+                "10.rebuild-x86_64-linux: 1-10",
+                "10.rebuild-x86_64-linux: 101-500",
+                "10.rebuild-x86_64-linux: 501+",
+                "10.rebuild-x86_64-linux: 501-1000",
+                "10.rebuild-x86_64-linux: 1001-2500",
+                "10.rebuild-x86_64-linux: 2501-5000",
+                "10.rebuild-x86_64-linux: 5001+",
+                "10.rebuild-aarch64-linux: 0",
+                "10.rebuild-aarch64-linux: 1",
+                "10.rebuild-aarch64-linux: 1-10",
+                "10.rebuild-aarch64-linux: 101-500",
+                "10.rebuild-aarch64-linux: 501+",
+                "10.rebuild-aarch64-linux: 501-1000",
+                "10.rebuild-aarch64-linux: 1001-2500",
+                "10.rebuild-aarch64-linux: 2501-5000",
+                "10.rebuild-aarch64-linux: 5001+",
             ]
         );
 
@@ -497,29 +864,52 @@ mod tests {
         tagger.parse_attrs(PackageArchSrc::linux(100).and_darwin(100).into());
         assert_eq!(
             tagger.tags_to_add(),
-            vec!["10.rebuild-darwin: 11-100", "10.rebuild-linux: 11-100",]
+            vec![
+                "10.rebuild-x86_64-darwin: 11-100",
+                "10.rebuild-aarch64-darwin: 11-100",
+                "10.rebuild-x86_64-linux: 11-100",
+                "10.rebuild-aarch64-linux: 11-100",
+            ]
         );
         assert_eq!(
             tagger.tags_to_remove(),
             vec![
-                "10.rebuild-darwin: 0",
-                "10.rebuild-darwin: 1",
-                "10.rebuild-darwin: 1-10",
-                "10.rebuild-darwin: 101-500",
-                "10.rebuild-darwin: 501+",
-                "10.rebuild-darwin: 501-1000",
-                "10.rebuild-darwin: 1001-2500",
-                "10.rebuild-darwin: 2501-5000",
-                "10.rebuild-darwin: 5001+",
-                "10.rebuild-linux: 0",
-                "10.rebuild-linux: 1",
-                "10.rebuild-linux: 1-10",
-                "10.rebuild-linux: 101-500",
-                "10.rebuild-linux: 501+",
-                "10.rebuild-linux: 501-1000",
-                "10.rebuild-linux: 1001-2500",
-                "10.rebuild-linux: 2501-5000",
-                "10.rebuild-linux: 5001+"
+                "10.rebuild-x86_64-darwin: 0",
+                "10.rebuild-x86_64-darwin: 1",
+                "10.rebuild-x86_64-darwin: 1-10",
+                "10.rebuild-x86_64-darwin: 101-500",
+                "10.rebuild-x86_64-darwin: 501+",
+                "10.rebuild-x86_64-darwin: 501-1000",
+                "10.rebuild-x86_64-darwin: 1001-2500",
+                "10.rebuild-x86_64-darwin: 2501-5000",
+                "10.rebuild-x86_64-darwin: 5001+",
+                "10.rebuild-aarch64-darwin: 0",
+                "10.rebuild-aarch64-darwin: 1",
+                "10.rebuild-aarch64-darwin: 1-10",
+                "10.rebuild-aarch64-darwin: 101-500",
+                "10.rebuild-aarch64-darwin: 501+",
+                "10.rebuild-aarch64-darwin: 501-1000",
+                "10.rebuild-aarch64-darwin: 1001-2500",
+                "10.rebuild-aarch64-darwin: 2501-5000",
+                "10.rebuild-aarch64-darwin: 5001+",
+                "10.rebuild-x86_64-linux: 0",
+                "10.rebuild-x86_64-linux: 1",
+                "10.rebuild-x86_64-linux: 1-10",
+                "10.rebuild-x86_64-linux: 101-500",
+                "10.rebuild-x86_64-linux: 501+",
+                "10.rebuild-x86_64-linux: 501-1000",
+                "10.rebuild-x86_64-linux: 1001-2500",
+                "10.rebuild-x86_64-linux: 2501-5000",
+                "10.rebuild-x86_64-linux: 5001+",
+                "10.rebuild-aarch64-linux: 0",
+                "10.rebuild-aarch64-linux: 1",
+                "10.rebuild-aarch64-linux: 1-10",
+                "10.rebuild-aarch64-linux: 101-500",
+                "10.rebuild-aarch64-linux: 501+",
+                "10.rebuild-aarch64-linux: 501-1000",
+                "10.rebuild-aarch64-linux: 1001-2500",
+                "10.rebuild-aarch64-linux: 2501-5000",
+                "10.rebuild-aarch64-linux: 5001+",
             ]
         );
 
@@ -527,29 +917,52 @@ mod tests {
         tagger.parse_attrs(PackageArchSrc::linux(101).and_darwin(101).into());
         assert_eq!(
             tagger.tags_to_add(),
-            vec!["10.rebuild-darwin: 101-500", "10.rebuild-linux: 101-500",]
+            vec![
+                "10.rebuild-x86_64-darwin: 101-500",
+                "10.rebuild-aarch64-darwin: 101-500",
+                "10.rebuild-x86_64-linux: 101-500",
+                "10.rebuild-aarch64-linux: 101-500",
+            ]
         );
         assert_eq!(
             tagger.tags_to_remove(),
             vec![
-                "10.rebuild-darwin: 0",
-                "10.rebuild-darwin: 1",
-                "10.rebuild-darwin: 1-10",
-                "10.rebuild-darwin: 11-100",
-                "10.rebuild-darwin: 501+",
-                "10.rebuild-darwin: 501-1000",
-                "10.rebuild-darwin: 1001-2500",
-                "10.rebuild-darwin: 2501-5000",
-                "10.rebuild-darwin: 5001+",
-                "10.rebuild-linux: 0",
-                "10.rebuild-linux: 1",
-                "10.rebuild-linux: 1-10",
-                "10.rebuild-linux: 11-100",
-                "10.rebuild-linux: 501+",
-                "10.rebuild-linux: 501-1000",
-                "10.rebuild-linux: 1001-2500",
-                "10.rebuild-linux: 2501-5000",
-                "10.rebuild-linux: 5001+"
+                "10.rebuild-x86_64-darwin: 0",
+                "10.rebuild-x86_64-darwin: 1",
+                "10.rebuild-x86_64-darwin: 1-10",
+                "10.rebuild-x86_64-darwin: 11-100",
+                "10.rebuild-x86_64-darwin: 501+",
+                "10.rebuild-x86_64-darwin: 501-1000",
+                "10.rebuild-x86_64-darwin: 1001-2500",
+                "10.rebuild-x86_64-darwin: 2501-5000",
+                "10.rebuild-x86_64-darwin: 5001+",
+                "10.rebuild-aarch64-darwin: 0",
+                "10.rebuild-aarch64-darwin: 1",
+                "10.rebuild-aarch64-darwin: 1-10",
+                "10.rebuild-aarch64-darwin: 11-100",
+                "10.rebuild-aarch64-darwin: 501+",
+                "10.rebuild-aarch64-darwin: 501-1000",
+                "10.rebuild-aarch64-darwin: 1001-2500",
+                "10.rebuild-aarch64-darwin: 2501-5000",
+                "10.rebuild-aarch64-darwin: 5001+",
+                "10.rebuild-x86_64-linux: 0",
+                "10.rebuild-x86_64-linux: 1",
+                "10.rebuild-x86_64-linux: 1-10",
+                "10.rebuild-x86_64-linux: 11-100",
+                "10.rebuild-x86_64-linux: 501+",
+                "10.rebuild-x86_64-linux: 501-1000",
+                "10.rebuild-x86_64-linux: 1001-2500",
+                "10.rebuild-x86_64-linux: 2501-5000",
+                "10.rebuild-x86_64-linux: 5001+",
+                "10.rebuild-aarch64-linux: 0",
+                "10.rebuild-aarch64-linux: 1",
+                "10.rebuild-aarch64-linux: 1-10",
+                "10.rebuild-aarch64-linux: 11-100",
+                "10.rebuild-aarch64-linux: 501+",
+                "10.rebuild-aarch64-linux: 501-1000",
+                "10.rebuild-aarch64-linux: 1001-2500",
+                "10.rebuild-aarch64-linux: 2501-5000",
+                "10.rebuild-aarch64-linux: 5001+",
             ]
         );
 
@@ -557,29 +970,52 @@ mod tests {
         tagger.parse_attrs(PackageArchSrc::linux(500).and_darwin(500).into());
         assert_eq!(
             tagger.tags_to_add(),
-            vec!["10.rebuild-darwin: 101-500", "10.rebuild-linux: 101-500",]
+            vec![
+                "10.rebuild-x86_64-darwin: 101-500",
+                "10.rebuild-aarch64-darwin: 101-500",
+                "10.rebuild-x86_64-linux: 101-500",
+                "10.rebuild-aarch64-linux: 101-500",
+            ]
         );
         assert_eq!(
             tagger.tags_to_remove(),
             vec![
-                "10.rebuild-darwin: 0",
-                "10.rebuild-darwin: 1",
-                "10.rebuild-darwin: 1-10",
-                "10.rebuild-darwin: 11-100",
-                "10.rebuild-darwin: 501+",
-                "10.rebuild-darwin: 501-1000",
-                "10.rebuild-darwin: 1001-2500",
-                "10.rebuild-darwin: 2501-5000",
-                "10.rebuild-darwin: 5001+",
-                "10.rebuild-linux: 0",
-                "10.rebuild-linux: 1",
-                "10.rebuild-linux: 1-10",
-                "10.rebuild-linux: 11-100",
-                "10.rebuild-linux: 501+",
-                "10.rebuild-linux: 501-1000",
-                "10.rebuild-linux: 1001-2500",
-                "10.rebuild-linux: 2501-5000",
-                "10.rebuild-linux: 5001+"
+                "10.rebuild-x86_64-darwin: 0",
+                "10.rebuild-x86_64-darwin: 1",
+                "10.rebuild-x86_64-darwin: 1-10",
+                "10.rebuild-x86_64-darwin: 11-100",
+                "10.rebuild-x86_64-darwin: 501+",
+                "10.rebuild-x86_64-darwin: 501-1000",
+                "10.rebuild-x86_64-darwin: 1001-2500",
+                "10.rebuild-x86_64-darwin: 2501-5000",
+                "10.rebuild-x86_64-darwin: 5001+",
+                "10.rebuild-aarch64-darwin: 0",
+                "10.rebuild-aarch64-darwin: 1",
+                "10.rebuild-aarch64-darwin: 1-10",
+                "10.rebuild-aarch64-darwin: 11-100",
+                "10.rebuild-aarch64-darwin: 501+",
+                "10.rebuild-aarch64-darwin: 501-1000",
+                "10.rebuild-aarch64-darwin: 1001-2500",
+                "10.rebuild-aarch64-darwin: 2501-5000",
+                "10.rebuild-aarch64-darwin: 5001+",
+                "10.rebuild-x86_64-linux: 0",
+                "10.rebuild-x86_64-linux: 1",
+                "10.rebuild-x86_64-linux: 1-10",
+                "10.rebuild-x86_64-linux: 11-100",
+                "10.rebuild-x86_64-linux: 501+",
+                "10.rebuild-x86_64-linux: 501-1000",
+                "10.rebuild-x86_64-linux: 1001-2500",
+                "10.rebuild-x86_64-linux: 2501-5000",
+                "10.rebuild-x86_64-linux: 5001+",
+                "10.rebuild-aarch64-linux: 0",
+                "10.rebuild-aarch64-linux: 1",
+                "10.rebuild-aarch64-linux: 1-10",
+                "10.rebuild-aarch64-linux: 11-100",
+                "10.rebuild-aarch64-linux: 501+",
+                "10.rebuild-aarch64-linux: 501-1000",
+                "10.rebuild-aarch64-linux: 1001-2500",
+                "10.rebuild-aarch64-linux: 2501-5000",
+                "10.rebuild-aarch64-linux: 5001+",
             ]
         );
 
@@ -588,31 +1024,51 @@ mod tests {
         assert_eq!(
             tagger.tags_to_add(),
             vec![
-                "10.rebuild-darwin: 501+",
-                "10.rebuild-darwin: 501-1000",
-                "10.rebuild-linux: 501+",
-                "10.rebuild-linux: 501-1000",
+                "10.rebuild-x86_64-darwin: 501+",
+                "10.rebuild-x86_64-darwin: 501-1000",
+                "10.rebuild-aarch64-darwin: 501+",
+                "10.rebuild-aarch64-darwin: 501-1000",
+                "10.rebuild-x86_64-linux: 501+",
+                "10.rebuild-x86_64-linux: 501-1000",
+                "10.rebuild-aarch64-linux: 501+",
+                "10.rebuild-aarch64-linux: 501-1000",
             ]
         );
         assert_eq!(
             tagger.tags_to_remove(),
             vec![
-                "10.rebuild-darwin: 0",
-                "10.rebuild-darwin: 1",
-                "10.rebuild-darwin: 1-10",
-                "10.rebuild-darwin: 11-100",
-                "10.rebuild-darwin: 101-500",
-                "10.rebuild-darwin: 1001-2500",
-                "10.rebuild-darwin: 2501-5000",
-                "10.rebuild-darwin: 5001+",
-                "10.rebuild-linux: 0",
-                "10.rebuild-linux: 1",
-                "10.rebuild-linux: 1-10",
-                "10.rebuild-linux: 11-100",
-                "10.rebuild-linux: 101-500",
-                "10.rebuild-linux: 1001-2500",
-                "10.rebuild-linux: 2501-5000",
-                "10.rebuild-linux: 5001+"
+                "10.rebuild-x86_64-darwin: 0",
+                "10.rebuild-x86_64-darwin: 1",
+                "10.rebuild-x86_64-darwin: 1-10",
+                "10.rebuild-x86_64-darwin: 11-100",
+                "10.rebuild-x86_64-darwin: 101-500",
+                "10.rebuild-x86_64-darwin: 1001-2500",
+                "10.rebuild-x86_64-darwin: 2501-5000",
+                "10.rebuild-x86_64-darwin: 5001+",
+                "10.rebuild-aarch64-darwin: 0",
+                "10.rebuild-aarch64-darwin: 1",
+                "10.rebuild-aarch64-darwin: 1-10",
+                "10.rebuild-aarch64-darwin: 11-100",
+                "10.rebuild-aarch64-darwin: 101-500",
+                "10.rebuild-aarch64-darwin: 1001-2500",
+                "10.rebuild-aarch64-darwin: 2501-5000",
+                "10.rebuild-aarch64-darwin: 5001+",
+                "10.rebuild-x86_64-linux: 0",
+                "10.rebuild-x86_64-linux: 1",
+                "10.rebuild-x86_64-linux: 1-10",
+                "10.rebuild-x86_64-linux: 11-100",
+                "10.rebuild-x86_64-linux: 101-500",
+                "10.rebuild-x86_64-linux: 1001-2500",
+                "10.rebuild-x86_64-linux: 2501-5000",
+                "10.rebuild-x86_64-linux: 5001+",
+                "10.rebuild-aarch64-linux: 0",
+                "10.rebuild-aarch64-linux: 1",
+                "10.rebuild-aarch64-linux: 1-10",
+                "10.rebuild-aarch64-linux: 11-100",
+                "10.rebuild-aarch64-linux: 101-500",
+                "10.rebuild-aarch64-linux: 1001-2500",
+                "10.rebuild-aarch64-linux: 2501-5000",
+                "10.rebuild-aarch64-linux: 5001+",
             ]
         );
 
@@ -621,31 +1077,51 @@ mod tests {
         assert_eq!(
             tagger.tags_to_add(),
             vec![
-                "10.rebuild-darwin: 501+",
-                "10.rebuild-darwin: 501-1000",
-                "10.rebuild-linux: 501+",
-                "10.rebuild-linux: 501-1000",
+                "10.rebuild-x86_64-darwin: 501+",
+                "10.rebuild-x86_64-darwin: 501-1000",
+                "10.rebuild-aarch64-darwin: 501+",
+                "10.rebuild-aarch64-darwin: 501-1000",
+                "10.rebuild-x86_64-linux: 501+",
+                "10.rebuild-x86_64-linux: 501-1000",
+                "10.rebuild-aarch64-linux: 501+",
+                "10.rebuild-aarch64-linux: 501-1000",
             ]
         );
         assert_eq!(
             tagger.tags_to_remove(),
             vec![
-                "10.rebuild-darwin: 0",
-                "10.rebuild-darwin: 1",
-                "10.rebuild-darwin: 1-10",
-                "10.rebuild-darwin: 11-100",
-                "10.rebuild-darwin: 101-500",
-                "10.rebuild-darwin: 1001-2500",
-                "10.rebuild-darwin: 2501-5000",
-                "10.rebuild-darwin: 5001+",
-                "10.rebuild-linux: 0",
-                "10.rebuild-linux: 1",
-                "10.rebuild-linux: 1-10",
-                "10.rebuild-linux: 11-100",
-                "10.rebuild-linux: 101-500",
-                "10.rebuild-linux: 1001-2500",
-                "10.rebuild-linux: 2501-5000",
-                "10.rebuild-linux: 5001+"
+                "10.rebuild-x86_64-darwin: 0",
+                "10.rebuild-x86_64-darwin: 1",
+                "10.rebuild-x86_64-darwin: 1-10",
+                "10.rebuild-x86_64-darwin: 11-100",
+                "10.rebuild-x86_64-darwin: 101-500",
+                "10.rebuild-x86_64-darwin: 1001-2500",
+                "10.rebuild-x86_64-darwin: 2501-5000",
+                "10.rebuild-x86_64-darwin: 5001+",
+                "10.rebuild-aarch64-darwin: 0",
+                "10.rebuild-aarch64-darwin: 1",
+                "10.rebuild-aarch64-darwin: 1-10",
+                "10.rebuild-aarch64-darwin: 11-100",
+                "10.rebuild-aarch64-darwin: 101-500",
+                "10.rebuild-aarch64-darwin: 1001-2500",
+                "10.rebuild-aarch64-darwin: 2501-5000",
+                "10.rebuild-aarch64-darwin: 5001+",
+                "10.rebuild-x86_64-linux: 0",
+                "10.rebuild-x86_64-linux: 1",
+                "10.rebuild-x86_64-linux: 1-10",
+                "10.rebuild-x86_64-linux: 11-100",
+                "10.rebuild-x86_64-linux: 101-500",
+                "10.rebuild-x86_64-linux: 1001-2500",
+                "10.rebuild-x86_64-linux: 2501-5000",
+                "10.rebuild-x86_64-linux: 5001+",
+                "10.rebuild-aarch64-linux: 0",
+                "10.rebuild-aarch64-linux: 1",
+                "10.rebuild-aarch64-linux: 1-10",
+                "10.rebuild-aarch64-linux: 11-100",
+                "10.rebuild-aarch64-linux: 101-500",
+                "10.rebuild-aarch64-linux: 1001-2500",
+                "10.rebuild-aarch64-linux: 2501-5000",
+                "10.rebuild-aarch64-linux: 5001+",
             ]
         );
 
@@ -654,31 +1130,51 @@ mod tests {
         assert_eq!(
             tagger.tags_to_add(),
             vec![
-                "10.rebuild-darwin: 501+",
-                "10.rebuild-darwin: 1001-2500",
-                "10.rebuild-linux: 501+",
-                "10.rebuild-linux: 1001-2500"
+                "10.rebuild-x86_64-darwin: 501+",
+                "10.rebuild-x86_64-darwin: 1001-2500",
+                "10.rebuild-aarch64-darwin: 501+",
+                "10.rebuild-aarch64-darwin: 1001-2500",
+                "10.rebuild-x86_64-linux: 501+",
+                "10.rebuild-x86_64-linux: 1001-2500",
+                "10.rebuild-aarch64-linux: 501+",
+                "10.rebuild-aarch64-linux: 1001-2500",
             ]
         );
         assert_eq!(
             tagger.tags_to_remove(),
             vec![
-                "10.rebuild-darwin: 0",
-                "10.rebuild-darwin: 1",
-                "10.rebuild-darwin: 1-10",
-                "10.rebuild-darwin: 11-100",
-                "10.rebuild-darwin: 101-500",
-                "10.rebuild-darwin: 501-1000",
-                "10.rebuild-darwin: 2501-5000",
-                "10.rebuild-darwin: 5001+",
-                "10.rebuild-linux: 0",
-                "10.rebuild-linux: 1",
-                "10.rebuild-linux: 1-10",
-                "10.rebuild-linux: 11-100",
-                "10.rebuild-linux: 101-500",
-                "10.rebuild-linux: 501-1000",
-                "10.rebuild-linux: 2501-5000",
-                "10.rebuild-linux: 5001+"
+                "10.rebuild-x86_64-darwin: 0",
+                "10.rebuild-x86_64-darwin: 1",
+                "10.rebuild-x86_64-darwin: 1-10",
+                "10.rebuild-x86_64-darwin: 11-100",
+                "10.rebuild-x86_64-darwin: 101-500",
+                "10.rebuild-x86_64-darwin: 501-1000",
+                "10.rebuild-x86_64-darwin: 2501-5000",
+                "10.rebuild-x86_64-darwin: 5001+",
+                "10.rebuild-aarch64-darwin: 0",
+                "10.rebuild-aarch64-darwin: 1",
+                "10.rebuild-aarch64-darwin: 1-10",
+                "10.rebuild-aarch64-darwin: 11-100",
+                "10.rebuild-aarch64-darwin: 101-500",
+                "10.rebuild-aarch64-darwin: 501-1000",
+                "10.rebuild-aarch64-darwin: 2501-5000",
+                "10.rebuild-aarch64-darwin: 5001+",
+                "10.rebuild-x86_64-linux: 0",
+                "10.rebuild-x86_64-linux: 1",
+                "10.rebuild-x86_64-linux: 1-10",
+                "10.rebuild-x86_64-linux: 11-100",
+                "10.rebuild-x86_64-linux: 101-500",
+                "10.rebuild-x86_64-linux: 501-1000",
+                "10.rebuild-x86_64-linux: 2501-5000",
+                "10.rebuild-x86_64-linux: 5001+",
+                "10.rebuild-aarch64-linux: 0",
+                "10.rebuild-aarch64-linux: 1",
+                "10.rebuild-aarch64-linux: 1-10",
+                "10.rebuild-aarch64-linux: 11-100",
+                "10.rebuild-aarch64-linux: 101-500",
+                "10.rebuild-aarch64-linux: 501-1000",
+                "10.rebuild-aarch64-linux: 2501-5000",
+                "10.rebuild-aarch64-linux: 5001+",
             ]
         );
 
@@ -687,31 +1183,51 @@ mod tests {
         assert_eq!(
             tagger.tags_to_add(),
             vec![
-                "10.rebuild-darwin: 501+",
-                "10.rebuild-darwin: 1001-2500",
-                "10.rebuild-linux: 501+",
-                "10.rebuild-linux: 1001-2500"
+                "10.rebuild-x86_64-darwin: 501+",
+                "10.rebuild-x86_64-darwin: 1001-2500",
+                "10.rebuild-aarch64-darwin: 501+",
+                "10.rebuild-aarch64-darwin: 1001-2500",
+                "10.rebuild-x86_64-linux: 501+",
+                "10.rebuild-x86_64-linux: 1001-2500",
+                "10.rebuild-aarch64-linux: 501+",
+                "10.rebuild-aarch64-linux: 1001-2500",
             ]
         );
         assert_eq!(
             tagger.tags_to_remove(),
             vec![
-                "10.rebuild-darwin: 0",
-                "10.rebuild-darwin: 1",
-                "10.rebuild-darwin: 1-10",
-                "10.rebuild-darwin: 11-100",
-                "10.rebuild-darwin: 101-500",
-                "10.rebuild-darwin: 501-1000",
-                "10.rebuild-darwin: 2501-5000",
-                "10.rebuild-darwin: 5001+",
-                "10.rebuild-linux: 0",
-                "10.rebuild-linux: 1",
-                "10.rebuild-linux: 1-10",
-                "10.rebuild-linux: 11-100",
-                "10.rebuild-linux: 101-500",
-                "10.rebuild-linux: 501-1000",
-                "10.rebuild-linux: 2501-5000",
-                "10.rebuild-linux: 5001+"
+                "10.rebuild-x86_64-darwin: 0",
+                "10.rebuild-x86_64-darwin: 1",
+                "10.rebuild-x86_64-darwin: 1-10",
+                "10.rebuild-x86_64-darwin: 11-100",
+                "10.rebuild-x86_64-darwin: 101-500",
+                "10.rebuild-x86_64-darwin: 501-1000",
+                "10.rebuild-x86_64-darwin: 2501-5000",
+                "10.rebuild-x86_64-darwin: 5001+",
+                "10.rebuild-aarch64-darwin: 0",
+                "10.rebuild-aarch64-darwin: 1",
+                "10.rebuild-aarch64-darwin: 1-10",
+                "10.rebuild-aarch64-darwin: 11-100",
+                "10.rebuild-aarch64-darwin: 101-500",
+                "10.rebuild-aarch64-darwin: 501-1000",
+                "10.rebuild-aarch64-darwin: 2501-5000",
+                "10.rebuild-aarch64-darwin: 5001+",
+                "10.rebuild-x86_64-linux: 0",
+                "10.rebuild-x86_64-linux: 1",
+                "10.rebuild-x86_64-linux: 1-10",
+                "10.rebuild-x86_64-linux: 11-100",
+                "10.rebuild-x86_64-linux: 101-500",
+                "10.rebuild-x86_64-linux: 501-1000",
+                "10.rebuild-x86_64-linux: 2501-5000",
+                "10.rebuild-x86_64-linux: 5001+",
+                "10.rebuild-aarch64-linux: 0",
+                "10.rebuild-aarch64-linux: 1",
+                "10.rebuild-aarch64-linux: 1-10",
+                "10.rebuild-aarch64-linux: 11-100",
+                "10.rebuild-aarch64-linux: 101-500",
+                "10.rebuild-aarch64-linux: 501-1000",
+                "10.rebuild-aarch64-linux: 2501-5000",
+                "10.rebuild-aarch64-linux: 5001+",
             ]
         );
 
@@ -720,31 +1236,51 @@ mod tests {
         assert_eq!(
             tagger.tags_to_add(),
             vec![
-                "10.rebuild-darwin: 501+",
-                "10.rebuild-darwin: 2501-5000",
-                "10.rebuild-linux: 501+",
-                "10.rebuild-linux: 2501-5000"
+                "10.rebuild-x86_64-darwin: 501+",
+                "10.rebuild-x86_64-darwin: 2501-5000",
+                "10.rebuild-aarch64-darwin: 501+",
+                "10.rebuild-aarch64-darwin: 2501-5000",
+                "10.rebuild-x86_64-linux: 501+",
+                "10.rebuild-x86_64-linux: 2501-5000",
+                "10.rebuild-aarch64-linux: 501+",
+                "10.rebuild-aarch64-linux: 2501-5000",
             ]
         );
         assert_eq!(
             tagger.tags_to_remove(),
             vec![
-                "10.rebuild-darwin: 0",
-                "10.rebuild-darwin: 1",
-                "10.rebuild-darwin: 1-10",
-                "10.rebuild-darwin: 11-100",
-                "10.rebuild-darwin: 101-500",
-                "10.rebuild-darwin: 501-1000",
-                "10.rebuild-darwin: 1001-2500",
-                "10.rebuild-darwin: 5001+",
-                "10.rebuild-linux: 0",
-                "10.rebuild-linux: 1",
-                "10.rebuild-linux: 1-10",
-                "10.rebuild-linux: 11-100",
-                "10.rebuild-linux: 101-500",
-                "10.rebuild-linux: 501-1000",
-                "10.rebuild-linux: 1001-2500",
-                "10.rebuild-linux: 5001+"
+                "10.rebuild-x86_64-darwin: 0",
+                "10.rebuild-x86_64-darwin: 1",
+                "10.rebuild-x86_64-darwin: 1-10",
+                "10.rebuild-x86_64-darwin: 11-100",
+                "10.rebuild-x86_64-darwin: 101-500",
+                "10.rebuild-x86_64-darwin: 501-1000",
+                "10.rebuild-x86_64-darwin: 1001-2500",
+                "10.rebuild-x86_64-darwin: 5001+",
+                "10.rebuild-aarch64-darwin: 0",
+                "10.rebuild-aarch64-darwin: 1",
+                "10.rebuild-aarch64-darwin: 1-10",
+                "10.rebuild-aarch64-darwin: 11-100",
+                "10.rebuild-aarch64-darwin: 101-500",
+                "10.rebuild-aarch64-darwin: 501-1000",
+                "10.rebuild-aarch64-darwin: 1001-2500",
+                "10.rebuild-aarch64-darwin: 5001+",
+                "10.rebuild-x86_64-linux: 0",
+                "10.rebuild-x86_64-linux: 1",
+                "10.rebuild-x86_64-linux: 1-10",
+                "10.rebuild-x86_64-linux: 11-100",
+                "10.rebuild-x86_64-linux: 101-500",
+                "10.rebuild-x86_64-linux: 501-1000",
+                "10.rebuild-x86_64-linux: 1001-2500",
+                "10.rebuild-x86_64-linux: 5001+",
+                "10.rebuild-aarch64-linux: 0",
+                "10.rebuild-aarch64-linux: 1",
+                "10.rebuild-aarch64-linux: 1-10",
+                "10.rebuild-aarch64-linux: 11-100",
+                "10.rebuild-aarch64-linux: 101-500",
+                "10.rebuild-aarch64-linux: 501-1000",
+                "10.rebuild-aarch64-linux: 1001-2500",
+                "10.rebuild-aarch64-linux: 5001+",
             ]
         );
 
@@ -753,31 +1289,51 @@ mod tests {
         assert_eq!(
             tagger.tags_to_add(),
             vec![
-                "10.rebuild-darwin: 501+",
-                "10.rebuild-darwin: 2501-5000",
-                "10.rebuild-linux: 501+",
-                "10.rebuild-linux: 2501-5000"
+                "10.rebuild-x86_64-darwin: 501+",
+                "10.rebuild-x86_64-darwin: 2501-5000",
+                "10.rebuild-aarch64-darwin: 501+",
+                "10.rebuild-aarch64-darwin: 2501-5000",
+                "10.rebuild-x86_64-linux: 501+",
+                "10.rebuild-x86_64-linux: 2501-5000",
+                "10.rebuild-aarch64-linux: 501+",
+                "10.rebuild-aarch64-linux: 2501-5000",
             ]
         );
         assert_eq!(
             tagger.tags_to_remove(),
             vec![
-                "10.rebuild-darwin: 0",
-                "10.rebuild-darwin: 1",
-                "10.rebuild-darwin: 1-10",
-                "10.rebuild-darwin: 11-100",
-                "10.rebuild-darwin: 101-500",
-                "10.rebuild-darwin: 501-1000",
-                "10.rebuild-darwin: 1001-2500",
-                "10.rebuild-darwin: 5001+",
-                "10.rebuild-linux: 0",
-                "10.rebuild-linux: 1",
-                "10.rebuild-linux: 1-10",
-                "10.rebuild-linux: 11-100",
-                "10.rebuild-linux: 101-500",
-                "10.rebuild-linux: 501-1000",
-                "10.rebuild-linux: 1001-2500",
-                "10.rebuild-linux: 5001+"
+                "10.rebuild-x86_64-darwin: 0",
+                "10.rebuild-x86_64-darwin: 1",
+                "10.rebuild-x86_64-darwin: 1-10",
+                "10.rebuild-x86_64-darwin: 11-100",
+                "10.rebuild-x86_64-darwin: 101-500",
+                "10.rebuild-x86_64-darwin: 501-1000",
+                "10.rebuild-x86_64-darwin: 1001-2500",
+                "10.rebuild-x86_64-darwin: 5001+",
+                "10.rebuild-aarch64-darwin: 0",
+                "10.rebuild-aarch64-darwin: 1",
+                "10.rebuild-aarch64-darwin: 1-10",
+                "10.rebuild-aarch64-darwin: 11-100",
+                "10.rebuild-aarch64-darwin: 101-500",
+                "10.rebuild-aarch64-darwin: 501-1000",
+                "10.rebuild-aarch64-darwin: 1001-2500",
+                "10.rebuild-aarch64-darwin: 5001+",
+                "10.rebuild-x86_64-linux: 0",
+                "10.rebuild-x86_64-linux: 1",
+                "10.rebuild-x86_64-linux: 1-10",
+                "10.rebuild-x86_64-linux: 11-100",
+                "10.rebuild-x86_64-linux: 101-500",
+                "10.rebuild-x86_64-linux: 501-1000",
+                "10.rebuild-x86_64-linux: 1001-2500",
+                "10.rebuild-x86_64-linux: 5001+",
+                "10.rebuild-aarch64-linux: 0",
+                "10.rebuild-aarch64-linux: 1",
+                "10.rebuild-aarch64-linux: 1-10",
+                "10.rebuild-aarch64-linux: 11-100",
+                "10.rebuild-aarch64-linux: 101-500",
+                "10.rebuild-aarch64-linux: 501-1000",
+                "10.rebuild-aarch64-linux: 1001-2500",
+                "10.rebuild-aarch64-linux: 5001+",
             ]
         );
 
@@ -786,31 +1342,51 @@ mod tests {
         assert_eq!(
             tagger.tags_to_add(),
             vec![
-                "10.rebuild-darwin: 501+",
-                "10.rebuild-darwin: 5001+",
-                "10.rebuild-linux: 501+",
-                "10.rebuild-linux: 5001+"
+                "10.rebuild-x86_64-darwin: 501+",
+                "10.rebuild-x86_64-darwin: 5001+",
+                "10.rebuild-aarch64-darwin: 501+",
+                "10.rebuild-aarch64-darwin: 5001+",
+                "10.rebuild-x86_64-linux: 501+",
+                "10.rebuild-x86_64-linux: 5001+",
+                "10.rebuild-aarch64-linux: 501+",
+                "10.rebuild-aarch64-linux: 5001+",
             ]
         );
         assert_eq!(
             tagger.tags_to_remove(),
             vec![
-                "10.rebuild-darwin: 0",
-                "10.rebuild-darwin: 1",
-                "10.rebuild-darwin: 1-10",
-                "10.rebuild-darwin: 11-100",
-                "10.rebuild-darwin: 101-500",
-                "10.rebuild-darwin: 501-1000",
-                "10.rebuild-darwin: 1001-2500",
-                "10.rebuild-darwin: 2501-5000",
-                "10.rebuild-linux: 0",
-                "10.rebuild-linux: 1",
-                "10.rebuild-linux: 1-10",
-                "10.rebuild-linux: 11-100",
-                "10.rebuild-linux: 101-500",
-                "10.rebuild-linux: 501-1000",
-                "10.rebuild-linux: 1001-2500",
-                "10.rebuild-linux: 2501-5000",
+                "10.rebuild-x86_64-darwin: 0",
+                "10.rebuild-x86_64-darwin: 1",
+                "10.rebuild-x86_64-darwin: 1-10",
+                "10.rebuild-x86_64-darwin: 11-100",
+                "10.rebuild-x86_64-darwin: 101-500",
+                "10.rebuild-x86_64-darwin: 501-1000",
+                "10.rebuild-x86_64-darwin: 1001-2500",
+                "10.rebuild-x86_64-darwin: 2501-5000",
+                "10.rebuild-aarch64-darwin: 0",
+                "10.rebuild-aarch64-darwin: 1",
+                "10.rebuild-aarch64-darwin: 1-10",
+                "10.rebuild-aarch64-darwin: 11-100",
+                "10.rebuild-aarch64-darwin: 101-500",
+                "10.rebuild-aarch64-darwin: 501-1000",
+                "10.rebuild-aarch64-darwin: 1001-2500",
+                "10.rebuild-aarch64-darwin: 2501-5000",
+                "10.rebuild-x86_64-linux: 0",
+                "10.rebuild-x86_64-linux: 1",
+                "10.rebuild-x86_64-linux: 1-10",
+                "10.rebuild-x86_64-linux: 11-100",
+                "10.rebuild-x86_64-linux: 101-500",
+                "10.rebuild-x86_64-linux: 501-1000",
+                "10.rebuild-x86_64-linux: 1001-2500",
+                "10.rebuild-x86_64-linux: 2501-5000",
+                "10.rebuild-aarch64-linux: 0",
+                "10.rebuild-aarch64-linux: 1",
+                "10.rebuild-aarch64-linux: 1-10",
+                "10.rebuild-aarch64-linux: 11-100",
+                "10.rebuild-aarch64-linux: 101-500",
+                "10.rebuild-aarch64-linux: 501-1000",
+                "10.rebuild-aarch64-linux: 1001-2500",
+                "10.rebuild-aarch64-linux: 2501-5000",
             ]
         );
     }
